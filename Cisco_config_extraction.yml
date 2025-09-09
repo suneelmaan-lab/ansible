@@ -1,0 +1,129 @@
+---
+- name: Run commands on cisco switches and save output in json file
+  hosts: all
+  gather_facts: no
+  connection: network_cli
+  collections:
+    - cisco.ios.ios_command
+  
+  tasks:
+    - name: Fetch VTY configuration output
+      cisco.ios.ios_command:
+        commands: 
+          - show running-config | section line vty
+          - show line
+      register: vty_output
+  
+    - name: Check snmp user and group information
+      cisco.ios.ios_command:
+        commands: 
+          - show snmp user
+          - show snmp group
+      register: snmp_output
+
+    - name: Validate dhcp relay configuration and correct dhcp association with dhcp servers
+      cisco.ios.ios_command:
+        commands: 
+          - show running-config | section ip dhcp relay
+          - show ip dhcp binding
+          - show ip dhcp server statistics
+      register: dhcp_output
+    
+    - name: Validate ise configuration
+      cisco.ios.ios_command:
+        commands: 
+          - show running-config | section radius
+          - show running-config | section tacacs
+          - show radius statistics
+          - show tacacs
+      register: ise_output
+    
+    - name: Validate device AAA configuration
+      cisco.ios.ios_command:
+        commands: 
+          - show running-config | section aaa
+          - show aaa servers
+      register: aaa_output
+
+    - name: Validate vlan list and names configured on the switch
+      cisco.ios.ios_command:
+        commands: 
+          - show vlan brief
+          - show running-config | section vlan
+      register: vlan_output
+    
+    - name: Identify any access ports with non-standard dot1x configuration
+      cisco.ios.ios_command:
+        commands: 
+          - show running-config | section interface
+          - show dot1x all
+      register: dot1x_output
+
+    - name: Check logging servers configured on the switch
+      cisco.ios.ios_command:
+        commands: 
+          - show running-config | section logging
+          - show logging
+      register: logging_output
+    
+    - name: Validate uplink port channels for correct LACP configuration
+      cisco.ios.ios_command:
+        commands: 
+          - show running-config | section interface Port-channel
+          - show etherchannel summary
+          - show interfaces status
+      register: portchannel_output
+
+    - name: Confirm proper MTU settings on uplink interfaces
+      cisco.ios.ios_command:
+        commands: 
+          - show interfaces | include MTU
+      register: mtu_output
+
+    - name: Validate system MTU settings
+      cisco.ios.ios_command:
+        commands: 
+          - show interfaces | include MTU
+      register: system_mtu_output
+
+    - name: verify that the source of management ips aligns with DNAC, ISE, and other monitoring tools
+      cisco.ios.ios_command:
+        commands: 
+          - show ip interface brief
+          - show running-config | section interface Vlan
+      register: mgmt_ip_output
+
+    - name: Ensure output directory exists (control node)
+      file:
+        path: "./outputs"
+        state: directory
+        mode: "0755"
+      delegate_to: localhost
+      run_once: true
+
+    - name: Aggregate collected command outputs (raw registers)
+      set_fact:
+        collected_outputs: >-
+          {{
+            {
+              'vty': vty_output | default({}),
+              'snmp': snmp_output | default({}),
+              'dhcp': dhcp_output | default({}),
+              'ise': ise_output | default({}),
+              'aaa': aaa_output | default({}),
+              'vlan': vlan_output | default({}),
+              'dot1x': dot1x_output | default({}),
+              'logging': logging_output | default({}),
+              'portchannel': portchannel_output | default({}),
+              'mtu': mtu_output | default({}),
+              'system_mtu': system_mtu_output | default({}),
+              'mgmt_ip': mgmt_ip_output | default({})
+            }
+          }}
+
+    - name: Save aggregated JSON per device (control node)
+      copy:
+        content: "{{ collected_outputs | to_nice_json }}"
+        dest: "./outputs/{{ inventory_hostname }}.json"
+      delegate_to: localhost
+    
