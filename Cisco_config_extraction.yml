@@ -20,21 +20,26 @@
           - show snmp user
           - show snmp group
       register: snmp_output
+    - name: Regex search
+      ansible.builtin.debug:
+        msg:
+          - "{{snmp_output.stdout[0] | regex_search('User name:\s*(\S+)')}}"
+          - "{{snmp_output.stdout[0] | regex_search('groupname:\s*(\S+)')}}"
 
     - name: Validate dhcp relay configuration and correct dhcp association with dhcp servers
       cisco.ios.ios_command:
         commands: 
-          - show running-config | section ip dhcp relay
-          - show ip dhcp binding
-          - show ip dhcp server statistics
+          - show running-config | section dhcp  
       register: dhcp_output
+    - name: Regex search
+      ansible.builtin.debug:
+        msg:
+          - "{{dhcp_output.stdout[0] | regex_search(ip dhcp snooping vlan\s+([\d,-]+))}}
     
     - name: Validate ise configuration
       cisco.ios.ios_command:
-        commands: 
-          - show running-config | section radius
+        commands:
           - show running-config | section tacacs
-          - show radius statistics
           - show tacacs
       register: ise_output
     
@@ -42,7 +47,6 @@
       cisco.ios.ios_command:
         commands: 
           - show running-config | section aaa
-          - show aaa servers
       register: aaa_output
 
     - name: Validate vlan list and names configured on the switch
@@ -51,7 +55,11 @@
           - show vlan brief
           - show running-config | section vlan
       register: vlan_output
-    
+    - name: Regex search
+      ansible.builtin.debug:
+        msg:
+          - "{{vlan_output.stdout[0] | regex_search('^(\d+)\s+([^\s]+(?:\s[^\s]+)*)')}}
+          
     - name: Identify any access ports with non-standard dot1x configuration
       cisco.ios.ios_command:
         commands: 
