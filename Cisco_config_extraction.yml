@@ -53,7 +53,6 @@
       cisco.ios.ios_command:
         commands: 
           - show vlan brief
-          - show running-config | section vlan
       register: vlan_output
     - name: Regex search
       ansible.builtin.debug:
@@ -62,8 +61,7 @@
           
     - name: Identify any access ports with non-standard dot1x configuration
       cisco.ios.ios_command:
-        commands: 
-          - show running-config | section interface
+        commands:
           - show dot1x all
       register: dot1x_output
 
@@ -73,6 +71,16 @@
           - show running-config | section logging
           - show logging
       register: logging_output
+    - name: Regex search to check logging ip address
+      ansible.builtin.debug:
+        msg:
+          - "{{logging_output.stdout[0] | regex_search('Logging to (\d{1,3}(?:\.\d{1,3}){3})')}}
+    - name: Regex search to check type of logging server
+      ansible.builtin.debug:
+        msg:
+          - "{{logging_output.stdout[0] | regex_search('(\w+ logging):.*?(disabled|enabled)')}}
+
+
     
     - name: Validate uplink port channels for correct LACP configuration
       cisco.ios.ios_command:
