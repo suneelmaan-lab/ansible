@@ -79,9 +79,7 @@
       ansible.builtin.debug:
         msg:
           - "{{logging_output.stdout[0] | regex_search('(\w+ logging):.*?(disabled|enabled)')}}
-
-
-    
+   
     - name: Validate uplink port channels for correct LACP configuration
       cisco.ios.ios_command:
         commands: 
@@ -95,19 +93,26 @@
         commands: 
           - show interfaces | include MTU
       register: mtu_output
+    - name: Regex search to check type of logging server
+      ansible.builtin.debug:
+        msg:
+          - "{{MTU_output.stdout[0] | regex_search('MTU\s+(\d+)\s+bytes')}}
 
     - name: Validate system MTU settings
       cisco.ios.ios_command:
         commands: 
-          - show interfaces | include MTU
+          - show system mtu
       register: system_mtu_output
 
     - name: verify that the source of management ips aligns with DNAC, ISE, and other monitoring tools
       cisco.ios.ios_command:
         commands: 
-          - show ip interface brief
-          - show running-config | section interface Vlan
+        - sh run | section source-interface
       register: mgmt_ip_output
+  - name: Regex search to check source interface
+      ansible.builtin.debug:
+        msg:
+          - "{{MTU_output.stdout[0] | regex_search('^(ip (tftp|tacacs|ssh) source-interface Vlan\d+|logging source-interface Vlan\d+|snmp-server trap-source Vlan\d+)$')}}
 
     - name: Ensure output directory exists (control node)
       file:
