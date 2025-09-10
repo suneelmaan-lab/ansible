@@ -112,8 +112,66 @@
   - name: Regex search to check source interface
       ansible.builtin.debug:
         msg:
-          - "{{MTU_output.stdout[0] | regex_search('^(ip (tftp|tacacs|ssh|logging|snmp) source-interface Vlan\d+|logging source-interface Vlan\d+|snmp-server trap-source Vlan\d+)$')}}
+          - "{{mgmt_ip_output.stdout[0] | regex_search('^(ip (tftp|tacacs|ssh|logging|snmp) source-interface Vlan\d+|logging source-interface Vlan\d+|snmp-server trap-source Vlan\d+)$')}}
+- name: verify the VTY Access-Lists
+      cisco.ios.ios_command:
+        commands: 
+        - sh run | s access-list VTYACCESS
+      register: vty_acl_output
+  - name: verify SNMP  Access-Lists
+      cisco.ios.ios_command:
+        commands: 
+        - sh run | s access-list SNMP-RO
+      register: snmp_acl_output
+- name: verify login banner
+      cisco.ios.ios_command:
+        commands: 
+        - sh run 
+      register: banner_output
+  - name: Regex search to check login banner
+      ansible.builtin.debug:
+        msg:
+          - "{{banner_output.stdout[0] | regex_search('banner login \^C([\s\S]*?)\^C')}}
 
+- name: verify NTP server
+      cisco.ios.ios_command:
+        commands: 
+        - sh run | s ntp
+      register: ntp_output
+      
+  - name: verify uplink interface configuration
+      cisco.ios.ios_command:
+        commands: 
+        - sh run | section interface
+      register: uplink_interface_output
+  - name: Regex search to check uplink configuration
+      ansible.builtin.debug:
+        msg:
+          - "{{uplink_interface_output.stdout[0] | regex_search('^interface\s+\S+[\s\S]*?description\s+ALM-S[23][\s\S]*?(?=^interface\s+\S+|\z)')}}    
+  - name: verify version
+      cisco.ios.ios_command:
+        commands: 
+        - show version
+      register: version_output
+  - name: Regex search to check uplink configuration
+      ansible.builtin.debug:
+        msg:
+          - "{{version_output.stdout[0] | regex_search('^interface\s+\S+[\s\S]*?description\s+ALM-S[23][\s\S]*?(?=^interface\s+\S+|\z)')}}    
+    - name: verify License
+      cisco.ios.ios_command:
+        commands: 
+        - show license summary
+      register: license_output  
+  - name: verify routes
+      cisco.ios.ios_command:
+        commands: 
+        - show ip route
+      register: route_output 
+ - name: verify clock
+      cisco.ios.ios_command:
+        commands: 
+        - show clock detail
+      register: clock_output 
     - name: Ensure output directory exists (control node)
       file:
         path: "./outputs"
@@ -122,25 +180,38 @@
       delegate_to: localhost
       run_once: true
 
-    - name: Aggregate collected command outputs (raw registers)
-      set_fact:
-        collected_outputs: >-
-          {{
-            {
-              'vty': vty_output | default({}),
-              'snmp': snmp_output | default({}),
-              'dhcp': dhcp_output | default({}),
-              'ise': ise_output | default({}),
-              'aaa': aaa_output | default({}),
-              'vlan': vlan_output | default({}),
-              'dot1x': dot1x_output | default({}),
-              'logging': logging_output | default({}),
-              'portchannel': portchannel_output | default({}),
-              'mtu': mtu_output | default({}),
-              'system_mtu': system_mtu_output | default({}),
-              'mgmt_ip': mgmt_ip_output | default({})
-            }
-          }}
+   - name: Aggregate collected command outputs (raw registers)
+  set_fact:
+    collected_outputs: >-
+      {{
+        {
+          'hostname': hostname_output | default(''),
+          'data': {
+            'vty': vty_output | default({}),
+            'vty_ACL': vty_acl_output | default({}),
+            'snmp': snmp_output | default({}),
+            'snmp_ACL': snmp_acl_output | default({}),
+            'dhcp': dhcp_output | default({}),
+            'ise': ise_output | default({}),
+            'aaa': aaa_output | default({}),
+            'vlan': vlan_output | default({}),
+            'dot1x': dot1x_output | default({}),
+            'logging': logging_output | default({}),
+            'portchannel': portchannel_output | default({}),
+            'mtu': mtu_output | default({}),
+            'system_mtu': system_mtu_output | default({}),
+            'mgmt_ip': mgmt_ip_output | default({}),
+            'Banner': banner_output | default({}),
+            'ntp': ntp_output | default({}),
+            'Uplink_if': uplink_interface_output | default({}),
+            'version': version_output | default({}),
+            'License': license_output | default({}),
+            'route': route_output | default({}),
+            'clock': clock_output | default({})
+            
+          }
+        }
+      }}
 
     - name: Save aggregated JSON per device (control node)
       copy:
