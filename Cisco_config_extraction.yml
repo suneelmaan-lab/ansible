@@ -112,7 +112,7 @@
   - name: Regex search to check source interface
       ansible.builtin.debug:
         msg:
-          - "{{MTU_output.stdout[0] | regex_search('^(ip (tftp|tacacs|ssh) source-interface Vlan\d+|logging source-interface Vlan\d+|snmp-server trap-source Vlan\d+)$')}}
+          - "{{MTU_output.stdout[0] | regex_search('^(ip (tftp|tacacs|ssh|logging|snmp) source-interface Vlan\d+|logging source-interface Vlan\d+|snmp-server trap-source Vlan\d+)$')}}
 
     - name: Ensure output directory exists (control node)
       file:
