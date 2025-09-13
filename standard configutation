@@ -1,0 +1,642 @@
+! Stack master priority:15. Following switches will have priority from 14 and decreasing order. 
+switch [stack number] priority [priority 7-15]
+!
+hostname [device name]
+! Global Domain: xxxxxx
+ip domain name [domain name]
+!
+ip name-server [DNS server address]
+ip domain lookup
+!
+! Generate the ssh key (2048 bits) - use only once! 
+crypto key generate rsa general-keys modulus 2048
+!
+service tcp-keepalives-in
+service tcp-keepalives-out
+service nagle
+service timestamps debug datetime msec localtime show-timezone
+service timestamps log datetime msec localtime show-timezone
+service password-encryption
+ip subnet-zero
+udld enable
+service compress-config - Not applicable on IE switches
+service sequence-numbers
+!
+diagnostic bootup level complete		
+!
+no tftp-server 			 
+no ip http server
+no ip http secure-server
+no ip http secure-port
+no ip http secure-ciphersuite
+no service finger
+no service udp-small-servers
+no service tcp-small-servers
+no service pad
+no tftp server
+no ip finger
+no ip bootp server		
+no ip source-route
+no ip gratuitous-arps
+ip icmp rate-limit unreachable 1000
+no ip forward-protocol udp tftp
+no ip forward-protocol udp domain
+no ip forward-protocol udp time
+no ip forward-protocol udp netbios-ns
+no ip forward-protocol udp netbios-dgm
+no ip forward-protocol udp Tacacs
+no vstack			
+! 
+sdm prefer routing 	
+!
+enable secret [level 15 password]
+!
+username [username] privilege 15 secret [user password] 	!Create “rtadmin” local user
+!
+logging buffered 65536 informational
+logging console critical 				
+logging trap informational
+! 
+aaa new-model
+aaa group server tacacs+ TACACS_SERVERS
+ server name [XXXXX]-ISE		! USSE3-ISEPSN for AMER/EMEA & AUSY3-ISEPSN for APAC/ASIA
+ server name [XXXXX]-ISE		! AUSY3-ISEPSN for AMER/EMEA & USSE3-ISEPSN for APAC/ASIA
+ server name [name]
+ ip tacacs source-interface Vlan69
+!
+tacacs server AUSY3-ISE
+ address ipv4 10.211.111.30
+ key [tacacs key]
+ timeout 30
+!
+tacacs server USSE3-ISE
+ address ipv4 10.137.111.30
+ key [tacacs key]
+ timeout 30
+!
+tacacs server [name]
+ address ipv4 [x.x.x.x]
+ key [tacacs key]
+ timeout 30
+!
+no tacacs-server directed-request
+!
+aaa authentication fail-message $
+********************************************************************
+* The supplied "Username" and/or "Password" is not valid.          *
+* This failed login attempt has been recorded for audit purposes.  *
+********************************************************************
+$
+aaa authentication login VTY-LOGIN group TACACS_SERVERS local-case 
+aaa authentication login CONSOLE group TACACS_SERVERS local-case 
+aaa authentication enable default group TACACS_SERVERS enable 
+aaa authorization exec EXEC-AUTH group TACACS_SERVERS local if-authenticated 	
+aaa authorization commands 1 COMMANDS-1-AUTH group TACACS_SERVERS local if-authenticated 
+aaa authorization commands 15 COMMANDS-15-AUTH group TACACS_SERVERS local if-authenticated 
+aaa accounting exec EXEC-ACCOUNTING start-stop group TACACS_SERVERS 
+aaa accounting commands 1 COMMANDS-1-ACCT start-stop group TACACS_SERVERS
+aaa accounting commands 15 COMMANDS-15-ACCT start-stop group TACACS_SERVERS
+!
+aaa session-id common
+!
+! Refer to Appendix A for timezone acronym and offset
+clock timezone [zone name] [offset]
+clock summer-time [zone name] recurring [start-week] [start-day] [start-month] [start-time] [end-week] [end-day] [end-month] [end-time] [offset]
+no ptp clock transparent domain 0 profile default
+!
+ip dhcp snooping 	! Make sure uplink interface has DHCP Snooping Trust
+ip dhcp snooping vlan [vlan id]
+no ip dhcp snooping information option
+!
+! For standard or new deployment 
+vtp mode transparent
+vtp version 2
+!
+! For existing network:
+Use the same VTP config as existing layer 2 devices
+!
+ip ssh version 2 
+ip ssh time-out 60
+ip ssh authentication-retries 3
+ip ssh dscp 40
+ip ssh source-interface Vlan69
+! 
+
+
+
+
+
+
+
+
+logging on 
+! Global syslog servers:
+! APAC-W 1: AUPERSPLUNK9	10.158.15.131
+! APAC-W 2: AUPERSPLUNK10	10.158.7.131
+! APAC-Asia: SGSINSPLUNK1	10.158.23.131
+! APAC-E 1: AUSYDSPLUNK17	10.158.31.131
+! APAC-E 2: AUMELSPLUNK1	10.158.39.131
+! EMEA-EU: UKLONSPLUNK1	10.158.47.131
+! AMER-Canada 1: CAMTLSPLUNK2	10.158.55.131
+! AMER-Canada 2: CATORSPLUNK2	10.158.79.131
+! AMER-US 1: USSEASPLUNK1	10.158.87.131
+! AMER-US 2: USSJCSPLUNK1	10.158.95.131
+Logging host [x.x.x.x]
+logging facility local7
+logging source-interface Vlan69
+!
+login block-for 30 attempts 3 within 15
+login delay 5
+login on-failure log
+login on-success log 		
+!
+archive 				
+ path flash:config-backup
+ maximum 10
+ write-memory
+ time-period 10080
+ log config
+   logging enable
+   logging size 1000
+   hidekeys
+!
+spanning-tree mode rapid-pvst
+spanning-tree loopguard default
+spanning-tree portfast default		
+spanning-tree portfast bpduguard default
+spanning-tree extend system-id
+!
+errdisable recovery cause all
+errdisable recovery interval 300
+!
+memory free low-watermark processor 200000
+memory free low-watermark io 20000
+memory reserve critical 1000
+!
+vlan 69
+ name MANAGEMENT_VLAN
+!
+vlan 400		
+name DUMMY_VLAN
+!
+vlan 998
+ name UNUSED_PORTS
+ state suspend
+!
+vlan 999
+ name NATIVE_VLAN
+!
+interface Vlan1
+ description DEFAULT VLAN - Do NOT Use!
+ shutdown
+!
+interface Vlan69
+ description Switch Management Interface
+ ip address [ip address] [mask]
+ no ip redirects
+ no ip unreachables
+ no ip proxy-arp
+ no ip mask-reply
+ no ip directed-broadcast
+!
+ip default-gateway [ip address]
+!
+ip access-list standard SNMP-RO 	! Not necessary if network management is segregated properly
+remark SNMP RO Control ACL
+ remark MAIN GLOBAL SOLARWINDS
+ permit 10.45.219.19
+ remark AUBNEMON5 - AU EAST POLLING
+ permit 10.211.3.24
+ remark AUPERMON19 - AU WEST, AF and EMEA POLLING
+ permit 10.45.219.29
+ remark USSLCMON25N1 – AMER POLLING
+ permit 10.255.254.21
+ remark RTNPMSRV01 – Canada POLLING
+ permit 10.32.0.41
+ remark CISCO COLLECTOR
+ permit 10.45.220.10
+ remark Global ISE
+ permit 10.211.111.30
+ permit 10.137.111.30
+ permit 10.198.33.42
+ permit 10.211.111.76
+ permit 10.211.111.77
+ permit 10.137.111.76
+ permit 10.137.111.77
+ remark Production systems Orion Monitoring server 
+ remark RTIO Production - kkkk
+ permit 10.217.49.7
+ permit 10.198.174.122
+ remark IST Comms Network Monitoring Server - xxxxxx
+ permit 10.216.77.120
+ remark xxxxxxx
+ permit 10.198.33.41
+ remark xxxxxx
+ permit 10.45.220.9
+ remark RTIO Production - xxxxxx
+ permit 10.217.49.54
+ remark auperznm13.corp
+ permit 10.198.174.27
+ remark auperznm14.corp
+ permit 10.198.174.28
+ remark SteelCentral 
+ permit 10.50.61.101
+ permit 10.54.65.82
+ permit 10.54.65.83
+ permit 10.54.65.84
+ permit 10.54.65.85
+ remark ServiceNowDiscovery
+ permit 10.45.218.150
+ permit 10.45.218.34
+ permit 10.226.1.249
+ permit 10.215.1.124
+ permit 10.215.1.126
+ permit 10.226.1.250
+ permit 10.226.65.11
+ permit 10.222.2.4
+ permit 10.226.129.43
+ permit 10.224.1.21
+ permit 10.74.64.185 
+ remark [description]
+ permit [x.x.x.x]
+ deny   any 
+!
+ip access-list standard VTYACCESS
+ remark CISCO COLLECTOR
+ permit 10.45.220.10
+ remark JUMP HOSTS
+ permit 10.198.33.41
+ permit 10.246.24.126
+ permit 10.45.218.72
+ permit 10.246.23.4
+ remark MAIN GLOBAL SOLARWINDS
+ permit 10.45.219.19
+ remark AUBNEMON5 - AU EAST POLLING
+ permit 10.211.3.24
+ remark AUPERMON19 - AU WEST, AF and EMEA POLLING
+ permit 10.45.219.29
+ remark USSLCMON25N1 – AMER POLLING
+ permit 10.255.254.21
+ remark RTNPMSRV01 – Canada POLLING
+ permit 10.32.0.41
+ remark APAC-W PRODSYS Jump Hosts
+ permit 10.218.195.25
+ permit 10.217.49.69
+ remark APAC-W PRODSYS NMS
+ permit 10.217.49.7
+ permit 10.217.49.40
+ permit 10.217.49.54
+ remark CyberARK PSM Sydney AZ1
+ permit 10.215.1.11
+ permit 10.215.1.12
+ permit 10.215.1.13
+ permit 10.215.1.17
+ remark CyberARK PSM Sydney AZ2
+ permit 10.215.1.16
+ permit 10.215.1.18
+ permit 10.215.1.19
+ permit 10.215.1.20
+ remark CyberARK PSM Sydney Perth
+ permit 10.45.214.47
+ permit 10.45.214.48
+ permit 10.45.214.51
+ permit 10.45.214.52
+ permit 10.45.214.53
+ permit 10.45.214.54
+ permit 10.45.214.55
+ permit 10.45.214.56
+ remark CyberARK PSM Toronto AZ1
+ permit 10.224.1.6
+ permit 10.224.1.7
+ permit 10.224.1.8
+ permit 10.224.1.9
+ remark CyberARK PSM Toronto AZ2
+ permit 10.224.1.12
+ permit 10.224.1.13
+ permit 10.224.1.14
+ permit 10.224.1.15
+ remark Global Standard Jumphosts
+ permit 10.158.15.133
+ permit 10.158.23.133
+ permit 10.158.31.133
+ permit 10.158.39.133
+ permit 10.158.47.133
+ permit 10.158.55.133
+ permit 10.158.7.133
+ permit 10.158.79.133
+ permit 10.158.87.133
+ permit 10.158.95.133
+ permit 10.158.15.134d
+ permit 10.158.23.134
+ permit 10.158.31.134
+ permit 10.158.39.134
+ permit 10.158.47.134
+ permit 10.158.55.134
+ permit 10.158.7.134
+ permit 10.158.79.134
+ permit 10.158.87.134
+ permit 10.158.95.134
+ remark [description]
+ permit [x.x.x.x] ! Add local network management subnets
+ deny any 
+!
+snmp-server community c0ll3ctoR RO SNMP-RO
+snmp-server community t0oHey$ RO SNMP-RO
+snmp-server community rtpublic RO SNMP-RO
+snmp-server community Ca5c@de RO SNMP-RO
+snmp-server community [community string] RO SNMP-RO
+!
+snmp-server host [x.x.x.x] version 2c [community string]
+snmp-server host [x.x.x.x] version 3 priv [username]
+snmp-server host 10.211.111.30 version 3 priv GLBLISE
+snmp-server host 10.137.111.30 version 3 priv GLBLISE
+snmp-server host 10.45.219.19 version 3 priv GLBLSLRWND
+snmp-server host 10.211.3.24 version 3 priv GLBLSLRWND
+snmp-server host 10.45.219.29 version 3 priv GLBLSLRWND
+snmp-server host 10.255.254.21 version 3 priv GLBLSLRWND
+snmp-server host 10.45.220.10 version 3 priv CISCOCOLLECT
+!
+snmp-server ip dscp 40
+!
+snmp-server group V3ROGROUP v3 priv 
+!
+snmp-server user GLBLISE V3ROGROUP v3 auth sha V3ROP@SS priv aes 128 V3ROP@SS
+snmp-server user GLBLSLRWND V3ROGROUP v3 auth sha V3ROP@SS priv aes 128 V3ROP@SS
+snmp-server user CISCOCOLLECT V3ROGROUP v3 auth sha V3ROP@SS priv aes 128 V3ROP@SScisco
+!
+snmp-server system-shutdown
+snmp-server trap-source Vlan69
+snmp-server enable traps entity
+snmp-server enable traps envmon
+snmp-server enable traps errdisable
+snmp-server enable traps stackwise
+snmp-server enable traps transceiver all
+snmp-server enable traps cpu threshold
+snmp-server enable traps flash insertion removal
+snmp-server enable traps bridge newroot topologychange
+snmp-server enable traps snmp linkdown linkup coldstart warmstart
+snmp-server enable traps snmp authentication linkdown linkup coldstart warmstart
+snmp-server enable traps vtp
+snmp-server enable traps vlancreate
+snmp-server enable traps vlandelete
+snmp-server enable traps port-security
+snmp-server enable traps envmon fan shutdown supply temperature status
+snmp-server enable traps hsrp
+snmp-server enable traps stpx inconsistency root-inconsistency loop-inconsistency
+snmp-server enable traps mac-notification change move threshold
+snmp-server enable traps vlan-membership
+snmp-server enable traps cpu threshold
+snmp-server location [building, site, country]
+snmp-server contact IST Global Network Team
+!
+banner login ^
+***********************************************************************
+*                                                                     *
+*                          W A R N I N G !                            *
+*                          ---------------                            *
+*    DO NOT PROCEED WITHOUT EXPLICIT AUTHORIZATION FROM xxxxxx!     *
+*    -------------------------------------------------------------    *
+*                                                                     *
+*  YOU HAVE CONNECTED TO A PROPRIETARY COMMUNICATIONS SYSTEM.  ACCESS *
+*  BEYOND THIS WARNING NOTICE IS RESTRICTED.  ONLY AUTHORIZED USERS   *
+*  WHO HAVE BEEN GRANTED PERMISSION BY xxxxxx ARE ALLOWED ACCESS   *
+*  TO THIS PRIVATE NETWORK.  ATTEMPTS AT ACCESS, OR ACCESS BY         *
+*  UNAUTHORIZED PERSONS OR PROCESSES BEYOND THIS NOTICE IS            *
+*  TRESPASSING.  VIOLATORS WILL BE PROSECUTED TO THE FULLEST EXTENT   *
+*  OF THE LAW.                                                        *
+*                                                                     *
+***********************************************************************
+^
+banner exec ^
+=============================================================================
+|                                                                           |
+|                                 EXEC MODE                                 |
+|                                                                           |
+|                >>> THIS IS A xxxxxx NETWORK ASSET <<<                   |
+|                                                                           |
+|                                                                           |
+| This asset is owned by xxxxxx and is under STRICT change control.      |
+|                                                                           |
+|                                                                           |
+| You have accessed this device with heightened privileges - use of this    |
+| system constitutes your consent to monitoring.                            |
+|                                                                           |
+| All changes (break-fix or planned) are audited and must be approved.      |
+|                                                                           |
+=============================================================================
+^C
+!
+alias exec srb show running-config | begin
+alias exec sri show running-config | include
+alias exec sre show running-config | exclude
+alias exec sir show ip route
+alias exec scn show cdp neighbors
+alias exec sid show interface description
+alias exec sib show ip interface brief
+alias exec svb show vlan brief
+!
+line con 0
+ session-timeout 10
+ login authentication CONSOLE
+!
+line vty 0 15
+ access-class VTYACCESS in 
+ authorization commands 1 COMMANDS-1-AUTH
+ authorization commands 15 COMMANDS-15-AUTH
+ authorization exec EXEC-AUTH
+ accounting commands 1 COMMANDS-1-ACCT
+ accounting commands 15 COMMANDS-15-ACCT
+ accounting exec EXEC-ACCOUNTING
+ logging synchronous
+ login authentication VTY-LOGIN
+ transport input ssh
+ transport output none 		
+!
+scheduler interval 500 
+!	
+ntp server [x.x.x.x] prefer
+ntp server [x.x.x.x]
+!
+!
+! If Jumbo frame is enabled on network segment 
+system mtu 9198
+!
+! Make sure configuration is backed up by Network Configuration Management solution
+no service password-recovery
+!
+! Add below for management interface (IOS only). Standard management interface: Vlan69
+control-plane host
+  management-interface Vlan69 allow ssh snmp 
+!
+
+ 
+Interface Templates
+
+Interface [fgt]x/x/x [Unused Port]
+ description UNUSED PORT
+ shutdown
+ switchport
+ switchport mode access
+ switchport access vlan 998
+ switchport nonegotiate
+ power inline never
+
+Interface [fg]x/x/x [Printer Port]
+ !
+ description PRINTER PORT
+ switchport access vlan [printer vlan]
+ switchport mode access
+ switchport nonegotiate
+ no logging event link-status
+ power inline never
+ speed auto
+ duplex auto
+ no snmp trap link-status 
+ storm-control broadcast level 5.00
+ storm-control multicast level 5.00
+ no cdp enable
+ spanning-tree portfast
+!
+
+Interface [fg]x/x/x [Non VoIP, Non-trunk Generic Port]
+ !
+ description PC
+ switchport access vlan [data vlan]
+ switchport mode access
+ switchport nonegotiate 
+ no logging event link-status
+ speed auto
+ duplex auto
+ power inline never
+ no snmp trap link-status 
+ storm-control broadcast level 5.00
+ storm-control multicast level 5.00
+ no cdp enable
+ spanning-tree portfast
+!
+
+
+Interface [fg]x/x/x [Cisco VoIP port]
+ 
+ description CISCO PHONE/PC
+ power inline auto
+ switchport access vlan [data vlan]
+ switchport mode access
+ switchport voice vlan [voice vlan]
+ no logging event link-status
+ no snmp trap link-status
+ no logging event power-inline-status
+ speed auto
+ duplex auto
+ spanning-tree portfast
+ storm-control broadcast level 5.00
+ storm-control multicast level 5.00
+ service-policy input [QoS Service Policy]
+ cdp enable
+
+
+Interface [fgt]x/x/x [Trunk]
+ !
+ description [To upstream device name [Remote interface] (connection type)]
+ logging event link-status
+ cdp enable
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 999
+ switchport mode trunk
+ switchport nonegotiate
+ ! On a copper PoE port
+ power inline never
+ !
+ ! where a channel group is used
+ channel-group <x> mode active
+ channel-protocol lacp
+!
+ ! if DHCP Snooping is enabled
+ ip dhcp snooping trust
+ !
+
+Interface Port-channel[x] 
+ !
+description [To upstream device name [Remote interface] (connection type)]
+ switchport
+ switchport trunk encapsulation dot1q
+ switchport trunk native vlan 999
+ switchport mode trunk
+ switchport nonegotiate
+ no ip address
+ logging event link-status
+ !
+ ! if DHCP Snooping is enabled
+ ip dhcp snooping trust
+ !
+
+
+Interface Vlan[x] 
+ !
+ description [SVI Purpose]
+ ip vrf forwarding [vrf]	 ! if required
+ ip address [ip address] [netmask]
+ ip pim sparse-mode 	! if multicast enabled
+ ip verify unicast reverse-path
+ no ip redirects
+ no ip proxy-arp
+ no ip mask-reply
+ no ip directed-broadcast
+ no ip unreachables		
+!
+
+
+
+Interface [fg]x/x/x [Cisco VC]
+!
+description VIDEO CONFERENCE UNIT
+switchport access vlan XXX
+switchport mode access
+spanning-tree portfast
+speed auto
+duplex auto
+no logging event link-status
+no logging event power-inline-status
+no snmp trap link-status
+! Make sure to trust DSCP tag coming from VC endpoint.
+! No marking policy necessary
+mls qos trust dscp	! For mls QoS platforms
+end
+!
+
+Interface [fg]x/x/x [Cisco Wireless]
+!
+description Cisco Access Point
+switchport access vlan XXX
+switchport mode access
+spanning-tree portfast
+no logging event link-status
+no snmp trap link-status
+cdp enable
+end
+!
+
+Interface [fg]x/x/x [FlexConnect Cisco Wireless ]
+!
+description Cisco Flex Access Point
+switchport trunk native vlan 999
+switchport mode trunk
+switchport trunk allowed vlan [vlan list]
+spanning-tree portfast trunk
+no logging event link-status
+no snmp trap link-status
+cdp enable
+end
+!
+
+Interface [fg]x/x/x [Port Security ]
+!
+! Add below to access port for Port Security
+! Not to be used when 802.1X is enabled
+!
+switchport port-security maximum 3
+switchport port-security
+switchport port-security aging time 5
+switchport port-security aging type inactivity
+switchport port-security violation shutdown
+!
