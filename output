@@ -1,0 +1,215 @@
+
+{
+  "changed": false,
+  "ansible_facts": {
+    "vlan_brief": [
+      [
+        "1",
+        "default"
+      ],
+      [
+        "10",
+        "Cntrl_PIX"
+      ],
+      [
+        "11",
+        "br-csw01_nm-fw01"
+      ],
+      [
+        "40",
+        "Modular_Mining"
+      ],
+      [
+        "41",
+        "Collision_Control_Trial"
+      ],
+      [
+        "50",
+        "br2_wireless_user1"
+      ],
+      [
+        "67",
+        "br2_wiredguestkiosk"
+      ],
+      [
+        "68",
+        "WAN_INTERCONNECT"
+      ],
+      [
+        "69",
+        "br2_network_mgmt"
+      ],
+      [
+        "70",
+        "br2_video_conf"
+      ],
+      [
+        "73",
+        "br2_access_ctrl"
+      ],
+      [
+        "74",
+        "Access Control CCTV"
+      ],
+      [
+        "80",
+        "br2_cisco_voice_80"
+      ],
+      [
+        "81",
+        "br2_cisco_voice_81"
+      ],
+      [
+        "83",
+        "br2_legacy_necvoice"
+      ],
+      [
+        "100",
+        "br2_servers"
+      ],
+      [
+        "110",
+        "br2_printers"
+      ],
+      [
+        "120",
+        "br2_corp_data_120"
+      ],
+      [
+        "121",
+        "br2_corp_data_121"
+      ],
+      [
+        "167",
+        "CORP_P2P_CRT04"
+      ],
+      [
+        "180",
+        "br2_voice_servers"
+      ],
+      [
+        "181",
+        "NEC-PABX"
+      ],
+      [
+        "200",
+        "br2_wirelessap_mgmt"
+      ],
+      [
+        "250",
+        "br2_proof_of_presence"
+      ],
+      [
+        "430",
+        "br2_access_ctrl_cctv"
+      ],
+      [
+        "460",
+        "br2_liquid_storage"
+      ],
+      [
+        "469",
+        "br2_solar_mgmt"
+      ],
+      [
+        "601",
+        "br2_auto_slope"
+      ],
+      [
+        "690",
+        "br2_sitecomms_mgmt"
+      ],
+      [
+        "999",
+        "test"
+      ],
+      [
+        "1002",
+        "fddi-default"
+      ],
+      [
+        "1003",
+        "trcrf-default"
+      ],
+      [
+        "1004",
+        "fddinet-default"
+      ],
+      [
+        "1005",
+        "trbrf-default"
+      ]
+    ]
+  },
+  "_ansible_no_log": false
+}
+
+
+{
+  "changed": false,
+  "ansible_facts": {
+    "ip_address": [
+      "interface Vlan69\n description Switch Management Interface\n ip address 10.198.104.46 255.255.255.0"
+    ]
+  
+{
+  "changed": false,
+  "ansible_facts": {
+    "vtp": [
+      "VTP Domain Name                 : brockman",
+      "VTP Pruning Mode                : Disabled",
+      "VTP Operating Mode                : Client"
+    ]
+ 
+
+{
+  "changed": false,
+  "stdout": [
+    "no ip dhcp snooping information option\nip dhcp snooping\nerrdisable recovery cause dhcp-rate-limit\nclass-map match-any system-cpp-police-dhcp-snooping\n  description DHCP snooping\n ip dhcp client client-id ascii cisco-44b6.beb0.5c00-Gi0/0\n ip dhcp snooping trust\n ip dhcp snooping trust\nsnmp-server enable traps dhcp"
+  ],
+  "stdout_lines": [
+    [
+      "no ip dhcp snooping information option",
+      "ip dhcp snooping",
+      "errdisable recovery cause dhcp-rate-limit",
+      "class-map match-any system-cpp-police-dhcp-snooping",
+      "  description DHCP snooping",
+      " ip dhcp client client-id ascii cisco-44b6.beb0.5c00-Gi0/0",
+      " ip dhcp snooping trust",
+      " ip dhcp snooping trust",
+      "snmp-server enable traps dhcp"
+    
+{
+  "changed": false,
+  "ansible_facts": {
+    "tacacs": [
+      "aaa group server tacacs+ TACACS_SERVERS",
+      "server name BEN-ISE-F5",
+      "server name PE3-ISE-F5",
+      "ip tacacs source-interface Vlan69",
+      "no ip forward-protocol udp tacacs",
+      "tacacs server BEN-ISE-F5",
+      "address ipv4 10.158.4.49",
+      "key 7 15310F091339333E2922760252564450",
+      "timeout 30",
+      "tacacs server PE3-ISE-F5",
+      "address ipv4 10.158.12.49",
+      "key 7 0225005E1C15173B4D5F4A3944464058",
+      "timeout 30"
+    ]
+ 
+    "log_server": [
+      "logging buffered 16384 informational",
+      "logging console critical",
+      "logging monitor notifications",
+      "no device-tracking logging theft",
+      "logging enable",
+      "logging size 1000",
+      "ip ssh logging events",
+      "logging source-interface Vlan69",
+      "logging host 10.158.15.131",
+      "logging host 10.158.12.4",
+      "logging synchronous",
+      "logging synchronous"
+    ]
+  
