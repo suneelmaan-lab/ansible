@@ -1,8 +1,0 @@
----
-#############################
-ansible_network_os: ios
-ansible_connection: network_cli
-ansible_ssh_common_args: '-o KexAlgorithms=diffie-hellman-group1-sha1 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand="ssh -W %h:%p {{ jh_ssh_user }}@{{ jh_ip }} -i ./connection/aupermon5.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"'
-ansible_port: 22
-jh_ssh_user: Malaka.Kahingalage
-jh_ip: 10.198.33.41
