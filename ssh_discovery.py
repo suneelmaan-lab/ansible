@@ -7,9 +7,9 @@ import json
 import mysql.connector
 
 # Seed IP i used in CP devcie...
-seed_ip='10.47.69.101'
-local_hostname = 'au-cpk-lv10-corp-esw01' #Later this can be collected by running 'show running-config | i hostname', for now manuly defined
-site_id = 'AU-CPK'
+seed_ip='a.b.c.d'
+local_hostname = 'switch_name' #Later this can be collected by running 'show running-config | i hostname', for now manuly defined
+site_id = 'xyz'
 
 # Connect to the MySQL database
 cnx = mysql.connector.connect(
